@@ -1,0 +1,17 @@
+<svg width="180" height="200" viewBox="0 0 180 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer bed frame -->
+  <rect x="16" y="8" width="148" height="184" rx="10" fill="#F3F4F6" stroke="#4B5563" stroke-width="2"/>
+
+  <!-- Headboard -->
+  <rect x="26" y="18" width="128" height="24" rx="8" fill="#E5E7EB" stroke="#4B5563" stroke-width="2"/>
+
+  <!-- Mattress -->
+  <rect x="26" y="50" width="128" height="128" rx="8" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+
+  <!-- Center seam -->
+  <line x1="90" y1="50" x2="90" y2="178" stroke="#E5E7EB" stroke-width="1.5"/>
+
+  <!-- Pillows -->
+  <rect x="38" y="58" width="42" height="18" rx="5" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1.5"/>
+  <rect x="100" y="58" width="42" height="18" rx="5" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1.5"/>
+</svg>
