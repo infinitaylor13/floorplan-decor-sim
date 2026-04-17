@@ -64,7 +64,7 @@
 
       <div class="altSection">
         <div class="altTitleRow">
-          <span class="altTitle">备选产品（行：每个产品一行）</span>
+          <span class="altTitle">备选产品</span>
           <div class="altTitleActions">
             <button type="button" class="btn small" @click="addCustomAttrRow(line)">
               添加属性
@@ -83,66 +83,24 @@
         <p v-if="line.alternatives.length === 0" class="hint">暂无产品，请点击「添加产品」。</p>
 
         <div v-else class="compareWrap">
-          <table
-            class="compareTable"
-            :aria-label="`「${line.name || '未命名家具'}」备选对比`"
+          <div
+            class="compareSplit"
+            :ref="(el) => setCompareSplitRef(line.id, el as HTMLDivElement | null)"
           >
-            <colgroup>
-              <col class="colWAction" />
-              <col class="colWProduct" />
-              <col class="colWPrice" />
-              <col
-                v-for="row in line.customAttrRows"
-                :key="'cw-' + row.id"
-                class="colWCustom"
-              />
-              <col class="colWLink" />
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="stickyCornerHead" scope="col">操作</th>
-                <th class="colHead colHeadProduct stickyProductHead" scope="col">产品名</th>
-                <th class="colHead colHeadPrice" scope="col">价格（元）</th>
-                <th
-                  v-for="row in line.customAttrRows"
-                  :key="row.id"
-                  class="colHead colHeadCustom"
-                  scope="col"
-                >
-                  <div class="customColHeadInner">
-                    <input
-                      v-model="row.label"
-                      type="text"
-                      class="input inputColTitle"
-                      placeholder="属性名称"
-                      aria-label="自定义列标题"
-                    />
-                    <button
-                      type="button"
-                      class="iconBtn attrColDeleteBtn"
-                      aria-label="删除该自定义列"
-                      title="删除该自定义列"
-                      @click="requestDeleteCustomAttrColumn(line.id, row.id)"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path
-                          d="M9 3h6m-8 4h10m-1 0-1 14H9L8 7"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </th>
-                <th class="colHead colHeadLink" scope="col">链接</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="alt in line.alternatives" :key="alt.id">
-                <th class="stickyCornerBody" scope="row">
-                  <div class="rowActionInner">
+            <table class="compareTable compareTableFixed">
+              <colgroup>
+                <col class="colWAction" />
+                <col class="colWProduct" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="fixedHeadCell" scope="col"></th>
+                  <th class="fixedHeadCell colHeadProduct" scope="col">产品名</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="alt in line.alternatives" :key="`fixed-${alt.id}`">
+                  <th class="fixedBodyCell fixedCheckCell" scope="row">
                     <input
                       type="checkbox"
                       class="budgetCheck"
@@ -153,90 +111,188 @@
                         onAltCheck(line, alt.id, ($event.target as HTMLInputElement).checked)
                       "
                     />
-                    <button
-                      type="button"
-                      class="iconBtn colDeleteBtn"
-                      aria-label="删除该产品"
-                      title="删除该产品"
-                      @click="requestDeleteAlternative(line.id, alt.id)"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path
-                          d="M9 3h6m-8 4h10m-1 0-1 14H9L8 7"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </th>
-                <td class="bodyCell bodyCellProduct stickyProductBody">
-                  <input
-                    v-model="alt.productName"
-                    type="text"
-                    class="input inputProduct"
-                    placeholder="产品名"
-                    autocomplete="off"
-                  />
-                </td>
-                <td class="bodyCell bodyCellPrice">
-                  <input
-                    :value="alt.price === null || alt.price === undefined ? '' : alt.price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    class="input inputPrice"
-                    placeholder="选填"
-                    @input="onPriceInput(alt, $event)"
-                  />
-                </td>
-                <td
-                  v-for="row in line.customAttrRows"
-                  :key="`${alt.id}-${row.id}`"
-                  class="bodyCell bodyCellCustom"
-                >
-                  <input
-                    :value="customCell(alt, row.id)"
-                    type="text"
-                    class="input inputCustom"
-                    placeholder="选填"
-                    @input="setCustomCell(alt, row.id, ($event.target as HTMLInputElement).value)"
-                  />
-                </td>
-                <td class="bodyCell bodyCellLink">
-                  <div class="inlineField">
+                  </th>
+                  <td class="fixedBodyCell bodyCellProduct">
                     <input
-                      v-model="alt.link"
-                      type="url"
-                      class="input inputLink inlineGrow"
-                      placeholder="https://… 选填"
+                      v-model="alt.productName"
+                      type="text"
+                      class="input inputProduct"
+                      placeholder="产品名"
+                      autocomplete="off"
                     />
-                    <a
-                      v-if="normalizedLink(alt.link)"
-                      class="extLink inlineSuffix"
-                      :href="normalizedLink(alt.link)!"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div
+              class="compareScroll"
+              @touchstart="onCompareScrollTouchStart(line.id, $event)"
+              @touchmove="onCompareScrollTouchMove(line.id, $event)"
+              @touchend="onCompareScrollTouchEnd(line.id)"
+              @touchcancel="onCompareScrollTouchEnd(line.id)"
+            >
+              <table
+                class="compareTable compareTableScroll"
+                :aria-label="`「${line.name || '未命名家具'}」备选对比`"
+              >
+                <colgroup>
+                  <col class="colWPrice" />
+                  <col
+                    v-for="row in line.customAttrRows"
+                    :key="'cw-' + row.id"
+                    class="colWCustom"
+                  />
+                  <col class="colWLink" />
+                  <col class="colWDelete" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="colHead colHeadPrice" scope="col">价格（元）</th>
+                    <th
+                      v-for="row in line.customAttrRows"
+                      :key="row.id"
+                      class="colHead colHeadCustom"
+                      scope="col"
                     >
-                      打开
-                    </a>
-                  </div>
-                </td>
-              </tr>
-              <tr class="addAttrRow">
-                <td
-                  class="addAttrCell"
-                  :colspan="4 + line.customAttrRows.length"
-                >
-                  <button type="button" class="btn small" @click="addAlternative(line.id)">
-                    添加产品
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                      <div class="customColHeadInner">
+                        <input
+                          v-model="row.label"
+                          type="text"
+                          class="input inputColTitle"
+                          placeholder="新属性"
+                          aria-label="自定义列标题"
+                        />
+                        <button
+                          type="button"
+                          class="iconBtn attrColDeleteBtn"
+                          aria-label="删除该自定义列"
+                          title="删除该自定义列"
+                          @click="requestDeleteCustomAttrColumn(line.id, row.id)"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M9 3h6m-8 4h10m-1 0-1 14H9L8 7"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </th>
+                    <th class="colHead colHeadLink" scope="col">链接</th>
+                    <th class="colHead colHeadDelete" scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="alt in line.alternatives"
+                    :key="alt.id"
+                    :draggable="dragEnabledLineId === line.id && dragEnabledAltId === alt.id"
+                    :class="{
+                      draggableReady: dragEnabledLineId === line.id && dragEnabledAltId === alt.id,
+                      draggingRow: draggingLineId === line.id && draggingAltId === alt.id,
+                    }"
+                    @dragstart="onAltRowDragStart(line.id, alt.id, $event)"
+                    @dragover="onAltRowDragOver(line.id, $event)"
+                    @drop="onAltRowDrop(line, alt.id, $event)"
+                    @dragend="onAltRowDragEnd"
+                  >
+                    <td class="bodyCell bodyCellPrice">
+                      <input
+                        :value="alt.price === null || alt.price === undefined ? '' : alt.price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        class="input inputPrice"
+                        placeholder="选填"
+                        @input="onPriceInput(alt, $event)"
+                      />
+                    </td>
+                    <td
+                      v-for="row in line.customAttrRows"
+                      :key="`${alt.id}-${row.id}`"
+                      class="bodyCell bodyCellCustom"
+                    >
+                      <input
+                        :value="customCell(alt, row.id)"
+                        type="text"
+                        class="input inputCustom"
+                        placeholder="选填"
+                        @input="setCustomCell(alt, row.id, ($event.target as HTMLInputElement).value)"
+                      />
+                    </td>
+                    <td class="bodyCell bodyCellLink">
+                      <div class="inlineField">
+                        <input
+                          v-model="alt.link"
+                          type="url"
+                          class="input inputLink inlineGrow"
+                          placeholder="https://… 选填"
+                        />
+                        <a
+                          v-if="normalizedLink(alt.link)"
+                          class="extLink inlineSuffix"
+                          :href="normalizedLink(alt.link)!"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          打开
+                        </a>
+                      </div>
+                    </td>
+                    <td class="bodyCell bodyCellDelete">
+                      <div class="rowOps">
+                        <button
+                          type="button"
+                          class="iconBtn colDeleteBtn"
+                          aria-label="删除该产品"
+                          title="删除该产品"
+                          @click="requestDeleteAlternative(line.id, alt.id)"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M9 3h6m-8 4h10m-1 0-1 14H9L8 7"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          class="iconBtn dragBtn"
+                          aria-label="长按后拖动排序"
+                          title="长按后拖动排序"
+                          @pointerdown="onDragHandlePointerDown(line.id, alt.id)"
+                          @pointerup="cancelDragHandleHold"
+                          @pointercancel="cancelDragHandleHold"
+                          @pointerleave="cancelDragHandleHold"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M9 6h6M9 12h6M9 18h6"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="compareAddBar">
+            <button type="button" class="btn small" @click="addAlternative(line.id)">
+              添加产品
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -246,7 +302,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUpdated, ref, watch } from 'vue'
 
 const STORAGE_KEY = 'floorplan-budget-calculator-v1'
 
@@ -285,6 +341,81 @@ const confirmKind = ref<'line' | 'alt' | 'customCol' | null>(null)
 const confirmLineId = ref('')
 const confirmAltId = ref('')
 const confirmCustomAttrRowId = ref('')
+const dragHoldTimer = ref<ReturnType<typeof setTimeout> | null>(null)
+const dragEnabledLineId = ref('')
+const dragEnabledAltId = ref('')
+const draggingLineId = ref('')
+const draggingAltId = ref('')
+const compareSplitRefs = ref<Record<string, HTMLDivElement>>({})
+const compareTouchState = ref<Record<string, number>>({})
+let syncRafId = 0
+
+const setCompareSplitRef = (lineId: string, el: HTMLDivElement | null) => {
+  if (el) compareSplitRefs.value[lineId] = el
+  else delete compareSplitRefs.value[lineId]
+  queueSyncCompareHeights()
+}
+
+const syncPairHeight = (left: HTMLElement | undefined, right: HTMLElement | undefined) => {
+  if (!left || !right) return
+  left.style.height = ''
+  right.style.height = ''
+  const h = Math.max(left.getBoundingClientRect().height, right.getBoundingClientRect().height)
+  left.style.height = `${h}px`
+  right.style.height = `${h}px`
+}
+
+const syncCompareHeights = () => {
+  for (const split of Object.values(compareSplitRefs.value)) {
+    const fixedHead = split.querySelector('.compareTableFixed thead tr') as HTMLElement | null
+    const scrollHead = split.querySelector('.compareTableScroll thead tr') as HTMLElement | null
+    syncPairHeight(fixedHead ?? undefined, scrollHead ?? undefined)
+
+    const fixedRows = Array.from(
+      split.querySelectorAll('.compareTableFixed tbody tr'),
+    ) as HTMLElement[]
+    const scrollRows = Array.from(
+      split.querySelectorAll('.compareTableScroll tbody tr'),
+    ) as HTMLElement[]
+    const len = Math.min(fixedRows.length, scrollRows.length)
+    for (let i = 0; i < len; i += 1) {
+      syncPairHeight(fixedRows[i], scrollRows[i])
+    }
+  }
+}
+
+const queueSyncCompareHeights = () => {
+  if (syncRafId) cancelAnimationFrame(syncRafId)
+  syncRafId = requestAnimationFrame(() => {
+    syncRafId = 0
+    syncCompareHeights()
+  })
+}
+
+const onCompareScrollTouchStart = (lineId: string, e: TouchEvent) => {
+  if (!e.touches.length) return
+  compareTouchState.value[lineId] = e.touches[0].clientX
+}
+
+const onCompareScrollTouchMove = (lineId: string, e: TouchEvent) => {
+  if (!e.touches.length) return
+  const startX = compareTouchState.value[lineId]
+  if (startX === undefined) return
+  const currentX = e.touches[0].clientX
+  const deltaX = currentX - startX
+  const scroller = e.currentTarget as HTMLDivElement | null
+  if (!scroller) return
+  const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth
+  const atLeft = scroller.scrollLeft <= 0
+  const atRight = scroller.scrollLeft >= maxScrollLeft - 1
+  if ((atLeft && deltaX > 0) || (atRight && deltaX < 0)) {
+    if (e.cancelable) e.preventDefault()
+  }
+}
+
+const onCompareScrollTouchEnd = (lineId: string) => {
+  delete compareTouchState.value[lineId]
+}
 
 const closeConfirm = () => {
   confirmOpen.value = false
@@ -292,6 +423,30 @@ const closeConfirm = () => {
   confirmLineId.value = ''
   confirmAltId.value = ''
   confirmCustomAttrRowId.value = ''
+}
+
+const clearDragState = () => {
+  draggingLineId.value = ''
+  draggingAltId.value = ''
+  dragEnabledLineId.value = ''
+  dragEnabledAltId.value = ''
+}
+
+const cancelDragHandleHold = () => {
+  if (!dragHoldTimer.value) return
+  clearTimeout(dragHoldTimer.value)
+  dragHoldTimer.value = null
+}
+
+const onDragHandlePointerDown = (lineId: string, altId: string) => {
+  cancelDragHandleHold()
+  dragEnabledLineId.value = ''
+  dragEnabledAltId.value = ''
+  dragHoldTimer.value = setTimeout(() => {
+    dragEnabledLineId.value = lineId
+    dragEnabledAltId.value = altId
+    dragHoldTimer.value = null
+  }, 280)
 }
 
 const requestDeleteFurnitureLine = (lineId: string) => {
@@ -416,9 +571,49 @@ const removeAlternative = (lineId: string, altId: string) => {
   line.selectedIds = line.selectedIds.filter((id) => id !== altId)
 }
 
+const reorderAlternative = (line: BudgetLine, sourceId: string, targetId: string) => {
+  if (sourceId === targetId) return
+  const sourceIndex = line.alternatives.findIndex((a) => a.id === sourceId)
+  const targetIndex = line.alternatives.findIndex((a) => a.id === targetId)
+  if (sourceIndex < 0 || targetIndex < 0) return
+  const next = [...line.alternatives]
+  const [moved] = next.splice(sourceIndex, 1)
+  next.splice(targetIndex, 0, moved)
+  line.alternatives = next
+}
+
+const onAltRowDragStart = (lineId: string, altId: string, e: DragEvent) => {
+  if (dragEnabledLineId.value !== lineId || dragEnabledAltId.value !== altId) {
+    e.preventDefault()
+    return
+  }
+  draggingLineId.value = lineId
+  draggingAltId.value = altId
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', altId)
+  }
+}
+
+const onAltRowDragOver = (lineId: string, e: DragEvent) => {
+  if (!draggingAltId.value || draggingLineId.value !== lineId) return
+  e.preventDefault()
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+}
+
+const onAltRowDrop = (line: BudgetLine, targetAltId: string, e: DragEvent) => {
+  if (!draggingAltId.value || draggingLineId.value !== line.id) return
+  e.preventDefault()
+  reorderAlternative(line, draggingAltId.value, targetAltId)
+}
+
+const onAltRowDragEnd = () => {
+  clearDragState()
+}
+
 const addCustomAttrRow = (line: BudgetLine) => {
   const rowId = uid()
-  line.customAttrRows.push({ id: rowId, label: '新属性' })
+  line.customAttrRows.push({ id: rowId, label: '' })
   for (const alt of line.alternatives) {
     alt.customValues = { ...alt.customValues, [rowId]: '' }
   }
@@ -560,15 +755,25 @@ const saveToStorage = () => {
 
 onMounted(() => {
   loadFromStorage()
+  nextTick(() => {
+    queueSyncCompareHeights()
+  })
 })
 
 watch(
   lines,
   () => {
     saveToStorage()
+    nextTick(() => {
+      queueSyncCompareHeights()
+    })
   },
   { deep: true },
 )
+
+onUpdated(() => {
+  queueSyncCompareHeights()
+})
 </script>
 
 <style scoped>
@@ -793,29 +998,58 @@ watch(
 }
 
 .compareWrap {
-  --action-col-w: 3.25rem;
-  /* 与 colgroup 一致，用于 sticky 的 left 偏移 */
+  --action-col-w: 2.25rem;
   --col-product: 6rem;
   --col-price: 6rem;
   --col-link: 6rem;
   --col-custom: 6rem;
+  --col-delete: 4.25rem;
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   margin: 0 -4px;
   padding: 4px;
   box-sizing: border-box;
 }
 
 .compareTable {
-  width: max-content;
-  max-width: none;
+  width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 13px;
-  /* auto：列宽随内容变长，colgroup / min-width 只作下限 */
   table-layout: auto;
+}
+
+.compareSplit {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.compareTableFixed {
+  flex: 0 0 auto;
+  width: max-content;
+  border-right: 0;
+}
+
+.compareTableFixed .colWProduct,
+.compareTableFixed .bodyCellProduct,
+.compareTableFixed .colHeadProduct {
+  width: auto;
+}
+
+.compareScroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+}
+
+.compareTableScroll {
+  width: max-content;
+  min-width: 100%;
 }
 
 .colWAction {
@@ -838,6 +1072,10 @@ watch(
   min-width: var(--col-custom);
 }
 
+.colWDelete {
+  min-width: var(--col-delete);
+}
+
 .compareTable th,
 .compareTable td {
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -850,77 +1088,76 @@ watch(
 .compareTable thead th {
   background: rgba(0, 140, 255, 0.08);
   font-weight: 800;
-  position: sticky;
-  top: 0;
-  z-index: 2;
   vertical-align: middle;
 }
 
-/* 实色背景（不透明），横滑时挡住后方单元格，避免文字叠在一起 */
-.stickyCornerHead {
-  position: sticky;
-  left: 0;
-  top: 0;
-  z-index: 5 !important;
-  min-width: var(--action-col-w);
-  width: var(--action-col-w);
-  max-width: var(--action-col-w);
-  text-align: center;
+.fixedHeadCell {
   background-color: #d7ecff !important;
-  background-clip: padding-box;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.08);
 }
 
-.stickyCornerBody {
-  position: sticky;
-  left: 0;
-  z-index: 4;
+.fixedBodyCell {
+  background-color: #eef4fb !important;
+}
+
+.fixedCheckCell {
   min-width: var(--action-col-w);
   width: var(--action-col-w);
-  max-width: var(--action-col-w);
   text-align: center;
   font-weight: 800;
-  background-color: #eef4fb !important;
-  background-clip: padding-box;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.08);
 }
 
-.stickyProductHead {
-  position: sticky;
-  left: var(--action-col-w);
-  top: 0;
-  z-index: 4 !important;
-  background-color: #e3f2ff !important;
-  background-clip: padding-box;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.08);
+.bodyCellDelete {
+  min-width: var(--col-delete);
+  text-align: center;
 }
 
-.stickyProductBody {
-  position: sticky;
-  left: var(--action-col-w);
-  z-index: 3;
-  background-color: #ffffff !important;
-  background-clip: padding-box;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.08);
+.colHeadDelete {
+  min-width: var(--col-delete);
+  text-align: center;
 }
 
-.rowActionInner {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
+.rowOps {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 4px;
 }
 
-.stickyCornerBody .colDeleteBtn {
+.bodyCellDelete .colDeleteBtn {
   width: 28px;
   height: 28px;
 }
 
-.stickyCornerBody .colDeleteBtn svg {
+.bodyCellDelete .colDeleteBtn svg {
   width: 16px;
   height: 16px;
+}
+
+.dragBtn {
+  width: 28px;
+  height: 28px;
+  cursor: grab;
+}
+
+.dragBtn:active {
+  cursor: grabbing;
+}
+
+.dragBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.draggableReady {
+  outline: 2px dashed rgba(0, 140, 255, 0.45);
+  outline-offset: -2px;
+}
+
+.draggingRow {
+  opacity: 0.68;
+}
+
+.compareAddBar {
+  margin-top: 10px;
 }
 
 .budgetCheck {
